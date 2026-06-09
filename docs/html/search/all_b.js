@@ -8,8 +8,8 @@ var searchData=
   ['maxallocationsperpass_5',['maxAllocationsPerPass',['../struct_vma_defragmentation_info.html#ac2db29d309bebc4f7d55041416e9694b',1,'VmaDefragmentationInfo']]],
   ['maxblockcount_6',['maxBlockCount',['../struct_vma_pool_create_info.html#ae41142f2834fcdc82baa4883c187b75c',1,'VmaPoolCreateInfo']]],
   ['maxbytesperpass_7',['maxBytesPerPass',['../struct_vma_defragmentation_info.html#a637ada77b02179a27fa92290000afac4',1,'VmaDefragmentationInfo']]],
-  ['memory_8',['memory',['../other_api_interop.html#opengl_interop_exporting_memory',1,'Exporting memory'],['../memory_mapping.html#memory_mapping_persistently_mapped_memory',1,'Persistently mapped memory']]],
-  ['memory_20allocation_9',['Memory allocation',['../group__group__alloc.html',1,'Memory allocation'],['../vk_khr_external_memory_win32.html#vk_khr_external_memory_win32_memory_allocation',1,'Memory allocation']]],
+  ['memory_8',['memory',['../other_api_interop.html#other_api_interop_exporting_memory',1,'Exporting memory'],['../other_api_interop.html#other_api_interop_importing_memory',1,'Importing memory'],['../memory_mapping.html#memory_mapping_persistently_mapped_memory',1,'Persistently mapped memory']]],
+  ['memory_20allocation_9',['Memory allocation',['../group__group__alloc.html',1,'Memory allocation'],['../other_api_interop.html#other_api_interop_exporting_memory_allocation',1,'Memory allocation']]],
   ['memory_20allocation_20callbacks_10',['Device memory allocation callbacks',['../configuration.html#allocation_callbacks',1,'']]],
   ['memory_20allocator_11',['Vulkan Memory Allocator',['../index.html',1,'']]],
   ['memory_20allocator_12',['Custom host memory allocator',['../configuration.html#custom_memory_allocator',1,'']]],
@@ -25,8 +25,9 @@ var searchData=
   ['memorytype_22',['memoryType',['../struct_vma_total_statistics.html#acb70e5b7fe543813ed8ba9282640969d',1,'VmaTotalStatistics::memoryType'],['../struct_vma_allocation_info.html#a7f6b0aa58c135e488e6b40a388dad9d5',1,'VmaAllocationInfo::memoryType']]],
   ['memorytypebits_23',['memoryTypeBits',['../struct_vma_allocation_create_info.html#a3bf940c0271d85d6ba32a4d820075055',1,'VmaAllocationCreateInfo']]],
   ['memorytypeindex_24',['memoryTypeIndex',['../struct_vma_pool_create_info.html#a596fa76b685d3f1f688f84a709a5b319',1,'VmaPoolCreateInfo']]],
-  ['minallocationalignment_25',['minAllocationAlignment',['../struct_vma_pool_create_info.html#ade3eca546f0c6ab4e8fbf20eb6d854cb',1,'VmaPoolCreateInfo']]],
-  ['minblockcount_26',['minBlockCount',['../struct_vma_pool_create_info.html#ad8006fb803185c0a699d30f3e9a865ae',1,'VmaPoolCreateInfo']]],
-  ['more_20information_27',['More information',['../vk_amd_device_coherent_memory.html#vk_amd_device_coherent_memory_more_information',1,'More information'],['../enabling_buffer_device_address.html#enabling_buffer_device_address_more_information',1,'More information']]],
-  ['movecount_28',['moveCount',['../struct_vma_defragmentation_pass_move_info.html#a1b3e18c23f9691f35baf183e615c4408',1,'VmaDefragmentationPassMoveInfo']]]
+  ['minalignment_25',['minAlignment',['../struct_vma_allocation_create_info.html#a4fa1895486efac8c128dcffad46706a0',1,'VmaAllocationCreateInfo']]],
+  ['minallocationalignment_26',['minAllocationAlignment',['../struct_vma_pool_create_info.html#ade3eca546f0c6ab4e8fbf20eb6d854cb',1,'VmaPoolCreateInfo']]],
+  ['minblockcount_27',['minBlockCount',['../struct_vma_pool_create_info.html#ad8006fb803185c0a699d30f3e9a865ae',1,'VmaPoolCreateInfo']]],
+  ['more_20information_28',['More information',['../vk_amd_device_coherent_memory.html#vk_amd_device_coherent_memory_more_information',1,'More information'],['../enabling_buffer_device_address.html#enabling_buffer_device_address_more_information',1,'More information']]],
+  ['movecount_29',['moveCount',['../struct_vma_defragmentation_pass_move_info.html#a1b3e18c23f9691f35baf183e615c4408',1,'VmaDefragmentationPassMoveInfo']]]
 ];
