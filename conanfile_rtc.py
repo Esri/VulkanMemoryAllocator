@@ -3,7 +3,7 @@ from conans import ConanFile
 
 class VulkanMemoryAllocatorConan(ConanFile):
     name = "VulkanMemoryAllocator"
-    version = "3.3.0"
+    version = "3.4.0"
     url = "https://github.com/Esri/VulkanMemoryAllocator/blob/runtimecore/LICENSE.txt"
     license = "https://github.com/Esri/VulkanMemoryAllocator/blob/runtimecore/LICENSE.txt"
     description = "Easy to integrate Vulkan memory allocation library."

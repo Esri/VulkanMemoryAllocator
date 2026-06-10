@@ -4,7 +4,7 @@
 <title>Validator / crawler helper</title>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
-<meta name="generator" content="Doxygen 1.13.0"/>
+<meta name="generator" content="Doxygen 1.17.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 </head>
 <body>
@@ -56,12 +56,14 @@
 <a href="general_considerations.html#general_considerations_validation_layer_warnings"/>
 <a href="general_considerations.html#general_considerations_versioning_and_compatibility"/>
 <a href="globals.html"/>
+<a href="globals_defs.html"/>
 <a href="globals_enum.html"/>
 <a href="globals_eval.html"/>
 <a href="globals_func.html"/>
 <a href="globals_type.html"/>
 <a href="group__group__alloc.html"/>
 <a href="group__group__alloc.html#ga02a94f25679275851a53e82eacbcfc73"/>
+<a href="group__group__alloc.html#ga07c66ffa000906a599d471047a7c0324"/>
 <a href="group__group__alloc.html#ga088da83d8eaf3ce9056d9ea0b981d472"/>
 <a href="group__group__alloc.html#ga0d9f4e4ba5bf9aab1f1c746387753d77"/>
 <a href="group__group__alloc.html#ga0faa3f9e5fb233d29d1e00390650febb"/>
@@ -70,6 +72,7 @@
 <a href="group__group__alloc.html#ga11f0fbc034fa81a4efedd73d61ce7568"/>
 <a href="group__group__alloc.html#ga13415cc0b443353a7b5abda300b833fc"/>
 <a href="group__group__alloc.html#ga1405cf3eae2fd1305d645879173031a0"/>
+<a href="group__group__alloc.html#ga1a8d7aba3bf5a4de66c801b9988afa58"/>
 <a href="group__group__alloc.html#ga1cf7774606721026a68aabe3af2e5b50"/>
 <a href="group__group__alloc.html#ga25ede29f830f326b8572a18ce879bf64"/>
 <a href="group__group__alloc.html#ga2770e325ea42e087c1b91fdf46d0292a"/>
@@ -101,6 +104,7 @@
 <a href="group__group__alloc.html#ga88a77cef37e5d3c4fc9eb328885d048d"/>
 <a href="group__group__alloc.html#ga8d327b7458d8cf426b84b5efba9bb9bf"/>
 <a href="group__group__alloc.html#ga980d7da2ce3b1fd5c8b8476bc362cc00"/>
+<a href="group__group__alloc.html#ga9a0b91c157adec03dae1e6ea78d33625"/>
 <a href="group__group__alloc.html#ga9a7c45f9c863695d98c83fa5ac940fe7"/>
 <a href="group__group__alloc.html#ga9bc268595cb33f6ec4d519cfce81ff45"/>
 <a href="group__group__alloc.html#gaa06a690013a0d01e60894ac378083834"/>
@@ -108,6 +112,7 @@
 <a href="group__group__alloc.html#gaaa8412919139ef413a4215ac6a290fae"/>
 <a href="group__group__alloc.html#gaac883dd38863944335071213b9ae8477"/>
 <a href="group__group__alloc.html#gab25b558d75f7378ec944a1522fdcc3c5"/>
+<a href="group__group__alloc.html#gab313b89299877ca21c196027bed9e874"/>
 <a href="group__group__alloc.html#gabe02cbb0cd913b3f125958179f2020fc"/>
 <a href="group__group__alloc.html#gabf28077dbf82d0908b8acbe8ee8dd9b8"/>
 <a href="group__group__alloc.html#gac3335566858b45541fa9c0d7a6bbb57e"/>
@@ -249,9 +254,14 @@
 <a href="memory_mapping.html#memory_mapping_mapping_functions"/>
 <a href="memory_mapping.html#memory_mapping_persistently_mapped_memory"/>
 <a href="other_api_interop.html"/>
-<a href="other_api_interop.html#opengl_interop_custom_alignment"/>
-<a href="other_api_interop.html#opengl_interop_exporting_memory"/>
-<a href="other_api_interop.html#opengl_interop_extended_allocation_information"/>
+<a href="other_api_interop.html#other_api_interop_exporting_custom_alignment"/>
+<a href="other_api_interop.html#other_api_interop_exporting_exporting_win32_handle"/>
+<a href="other_api_interop.html#other_api_interop_exporting_extended_allocation_information"/>
+<a href="other_api_interop.html#other_api_interop_exporting_initialization"/>
+<a href="other_api_interop.html#other_api_interop_exporting_memory"/>
+<a href="other_api_interop.html#other_api_interop_exporting_memory_allocation"/>
+<a href="other_api_interop.html#other_api_interop_exporting_preparations"/>
+<a href="other_api_interop.html#other_api_interop_importing_memory"/>
 <a href="pages.html"/>
 <a href="quick_start.html"/>
 <a href="quick_start.html#quick_start_initialization"/>
@@ -272,6 +282,7 @@
 <a href="struct_vma_allocation_create_info-members.html"/>
 <a href="struct_vma_allocation_create_info.html"/>
 <a href="struct_vma_allocation_create_info.html#a3bf940c0271d85d6ba32a4d820075055"/>
+<a href="struct_vma_allocation_create_info.html#a4fa1895486efac8c128dcffad46706a0"/>
 <a href="struct_vma_allocation_create_info.html#a6272c0555cfd1fe28bff1afeb6190150"/>
 <a href="struct_vma_allocation_create_info.html#a7fe8d81a1ad10b2a2faacacee5b15d6d"/>
 <a href="struct_vma_allocation_create_info.html#a8259e85c272683434f4abb4ddddffe19"/>
@@ -397,7 +408,6 @@
 <a href="struct_vma_vulkan_functions-members.html"/>
 <a href="struct_vma_vulkan_functions.html"/>
 <a href="struct_vma_vulkan_functions.html#a0c4907235aab9df2767b79836afa2dc9"/>
-<a href="struct_vma_vulkan_functions.html#a0d992896e6ffcf92b9d7ea049fa5c445"/>
 <a href="struct_vma_vulkan_functions.html#a10a9bf098a46640fa0a75f1c5fd80b9a"/>
 <a href="struct_vma_vulkan_functions.html#a1338d96a128a5ade648b8d934907c637"/>
 <a href="struct_vma_vulkan_functions.html#a23ebe70be515b9b5010a1d691200e325"/>
@@ -439,6 +449,8 @@
 <a href="virtual_allocator.html#virtual_allocator_making_virtual_allocations"/>
 <a href="virtual_allocator.html#virtual_allocator_statistics"/>
 <a href="vk__mem__alloc_8h.html"/>
+<a href="vk__mem__alloc_8h.html#a024abdb7917e063f94f398936a931887"/>
+<a href="vk__mem__alloc_8h.html#acb14074601291f583de581ed204fd8c1"/>
 <a href="vk_amd_device_coherent_memory.html"/>
 <a href="vk_amd_device_coherent_memory.html#vk_amd_device_coherent_memory_initialization"/>
 <a href="vk_amd_device_coherent_memory.html#vk_amd_device_coherent_memory_more_information"/>
@@ -447,10 +459,5 @@
 <a href="vk_ext_memory_priority.html#vk_ext_memory_priority_initialization"/>
 <a href="vk_ext_memory_priority.html#vk_ext_memory_priority_usage"/>
 <a href="vk_khr_dedicated_allocation.html"/>
-<a href="vk_khr_external_memory_win32.html"/>
-<a href="vk_khr_external_memory_win32.html#vk_khr_external_memory_win32_exporting_win32_handle"/>
-<a href="vk_khr_external_memory_win32.html#vk_khr_external_memory_win32_initialization"/>
-<a href="vk_khr_external_memory_win32.html#vk_khr_external_memory_win32_memory_allocation"/>
-<a href="vk_khr_external_memory_win32.html#vk_khr_external_memory_win32_preparations"/>
 </body>
 </html>

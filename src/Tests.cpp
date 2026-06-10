@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017-2025 Advanced Micro Devices, Inc. All rights reserved.
+// Copyright (c) 2017-2026 Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -380,7 +380,7 @@ VkResult MainTest(Result& outResult, const Config& config)
 
     time_point timeBeg = std::chrono::high_resolution_clock::now();
 
-    std::atomic<size_t> allocationCount = 0;
+    std::atomic<size_t> allocationCount{ 0 };
     VkResult res = VK_SUCCESS;
 
     uint32_t memUsageProbabilitySum =
@@ -545,7 +545,7 @@ VkResult MainTest(Result& outResult, const Config& config)
         }
     };
 
-    std::atomic<uint32_t> numThreadsReachedMaxAllocations = 0;
+    std::atomic<uint32_t> numThreadsReachedMaxAllocations{ 0 };
     HANDLE threadsFinishEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
     auto ThreadProc = [&](uint32_t randSeed) -> void
@@ -6140,6 +6140,153 @@ static void TestMemoryUsage()
     }
 }
 
+static void TestAllocationWithAlignment()
+{
+    wprintf(L"Test allocation with alignment\n");
+
+    static const VkDeviceSize BUFFER_SIZE = 4 * KILOBYTE;
+    static const VkDeviceSize MIN_ALIGNMENT = 64 * KILOBYTE;
+
+    VkBufferCreateInfo bufCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+    bufCreateInfo.size = BUFFER_SIZE;
+    bufCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    
+    VkResult res;
+
+    // 1. Using vmaAllocateMemory with VmaAllocationCreateInfo::minAlignment
+    {
+        VkBuffer buffers[2] = {};
+        VkMemoryRequirements memReq[2] = {};
+        VmaAllocation allocations[2] = {};
+        VmaAllocationInfo allocInfo[2] = {};
+
+        for(uint32_t i = 0; i < 2; ++i)
+        {
+            res = vkCreateBuffer(g_hDevice, &bufCreateInfo, g_Allocs, &buffers[i]);
+            TEST(res == VK_SUCCESS && buffers[i] != VK_NULL_HANDLE);
+            vkGetBufferMemoryRequirements(g_hDevice, buffers[i], &memReq[i]);
+        }
+
+        VmaAllocationCreateInfo allocCreateInfo = {};
+        allocCreateInfo.minAlignment = MIN_ALIGNMENT;
+
+        for(uint32_t i = 0; i < 2; ++i)
+        {
+            res = vmaAllocateMemory(g_hAllocator, &memReq[i], &allocCreateInfo, &allocations[i], &allocInfo[i]);
+            TEST(res == VK_SUCCESS && allocations[i] != VK_NULL_HANDLE);
+            TEST(allocInfo[i].offset % MIN_ALIGNMENT == 0); // !!!
+        }
+
+        for(uint32_t i = 0; i < 2; ++i)
+        {
+            res = vmaBindBufferMemory(g_hAllocator, allocations[i], buffers[i]);
+            TEST(res == VK_SUCCESS);
+        }
+
+        for(uint32_t i = 0; i < 2; ++i)
+        {
+            vkDestroyBuffer(g_hDevice, buffers[i], g_Allocs);
+            vmaFreeMemory(g_hAllocator, allocations[i]);
+        }
+    }
+
+    // 2. Using vmaCreateBuffer with VmaAllocationCreateInfo::minAlignment
+    {
+        VkBuffer buffers[2] = {};
+        VmaAllocation allocations[2] = {};
+        VmaAllocationInfo allocInfo[2] = {};
+
+        VmaAllocationCreateInfo allocCreateInfo = {};
+        allocCreateInfo.minAlignment = MIN_ALIGNMENT;
+
+        for(uint32_t i = 0; i < 2; ++i)
+        {
+            res = vmaCreateBuffer(g_hAllocator, &bufCreateInfo, &allocCreateInfo, &buffers[i], &allocations[i], &allocInfo[i]);
+            TEST(res == VK_SUCCESS && buffers[i] != VK_NULL_HANDLE && allocations[i] != VK_NULL_HANDLE);
+            TEST(allocInfo[i].offset % MIN_ALIGNMENT == 0); // !!!
+        }
+
+        for(uint32_t i = 0; i < 2; ++i)
+        {
+            vmaDestroyBuffer(g_hAllocator, buffers[i], allocations[i]);
+        }
+    }
+
+    // 3. Using vmaCreateBuffer in a custom pool with VmaPoolCreateInfo::minAllocationAlignment specified
+    {
+        VmaAllocationCreateInfo sampleAllocCreateInfo = {};
+        sampleAllocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+
+        VmaPoolCreateInfo poolCreateInfo = {};
+        res = vmaFindMemoryTypeIndexForBufferInfo(g_hAllocator, &bufCreateInfo, &sampleAllocCreateInfo, &poolCreateInfo.memoryTypeIndex);
+        TEST(res == VK_SUCCESS);
+
+        poolCreateInfo.blockSize = 4 * MIN_ALIGNMENT;
+        poolCreateInfo.minBlockCount = 1;
+        poolCreateInfo.maxBlockCount = 1;
+        poolCreateInfo.minAllocationAlignment = MIN_ALIGNMENT;
+
+        VmaPool pool = VK_NULL_HANDLE;
+        if(res == VK_SUCCESS)
+        {
+            res = vmaCreatePool(g_hAllocator, &poolCreateInfo, &pool);
+            TEST(res == VK_SUCCESS && pool != VK_NULL_HANDLE);
+        }
+
+        VkBuffer buffers[2] = {};
+        VmaAllocation allocations[2] = {};
+        VmaAllocationInfo allocInfo[2] = {};
+
+        VmaAllocationCreateInfo allocCreateInfo = {};
+        allocCreateInfo.pool = pool;
+
+        if(pool != VK_NULL_HANDLE)
+        {
+            for(uint32_t i = 0; i < 2; ++i)
+            {
+                res = vmaCreateBuffer(g_hAllocator, &bufCreateInfo, &allocCreateInfo, &buffers[i], &allocations[i], &allocInfo[i]);
+                TEST(res == VK_SUCCESS && buffers[i] != VK_NULL_HANDLE && allocations[i] != VK_NULL_HANDLE);
+                TEST(allocInfo[i].offset % MIN_ALIGNMENT == 0); // !!!
+            }
+        }
+
+        for(uint32_t i = 0; i < 2; ++i)
+        {
+            vmaDestroyBuffer(g_hAllocator, buffers[i], allocations[i]);
+        }
+
+        vmaDestroyPool(g_hAllocator, pool);
+    }
+
+    // 4. Using vmaCreateBufferWithAlignment
+    {
+        VkBuffer buffers[2] = {};
+        VmaAllocation allocations[2] = {};
+        VmaAllocationInfo allocInfo[2] = {};
+
+        VmaAllocationCreateInfo allocCreateInfo = {};
+
+        for(uint32_t i = 0; i < 2; ++i)
+        {
+            res = vmaCreateBufferWithAlignment(
+                g_hAllocator,
+                &bufCreateInfo,
+                &allocCreateInfo,
+                MIN_ALIGNMENT,
+                &buffers[i],
+                &allocations[i],
+                &allocInfo[i]);
+            TEST(res == VK_SUCCESS && buffers[i] != VK_NULL_HANDLE && allocations[i] != VK_NULL_HANDLE);
+            TEST(allocInfo[i].offset % MIN_ALIGNMENT == 0); // !!!
+        }
+
+        for(uint32_t i = 0; i < 2; ++i)
+        {
+            vmaDestroyBuffer(g_hAllocator, buffers[i], allocations[i]);
+        }
+    }
+}
+
 static void TestDataUploadingWithStagingBuffer()
 {
     wprintf(L"Testing data uploading with staging buffer...\n");
@@ -6181,7 +6328,8 @@ static void TestDataUploadingWithStagingBuffer()
     TEST(result == VK_SUCCESS);
 
     TEST(stagingBufferAllocInfo.pMappedData != nullptr);
-    vmaCopyMemoryToAllocation(g_hAllocator, bufferData.data(), stagingBufferAlloc, 0, bufferData.size());
+    result = vmaCopyMemoryToAllocation(g_hAllocator, bufferData.data(), stagingBufferAlloc, 0, bufferData.size());
+    TEST(result == VK_SUCCESS);
 
     BeginSingleTimeCommands();
 
@@ -6251,7 +6399,8 @@ static void TestDataUploadingWithMappedMemory() {
     TEST(memPropFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
     TEST(uniformBufferAllocInfo.pMappedData != nullptr);
-    vmaCopyMemoryToAllocation(g_hAllocator, bufferData.data(), uniformBufferAlloc, 0, bufferData.size());
+    result = vmaCopyMemoryToAllocation(g_hAllocator, bufferData.data(), uniformBufferAlloc, 0, bufferData.size());
+    TEST(result == VK_SUCCESS);
 
     BeginSingleTimeCommands();
 
@@ -6303,7 +6452,8 @@ static void TestAdvancedDataUploading() {
     if (memPropFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
         // The allocation ended up as mapped memory.
         TEST(uniformBufferAllocInfo.pMappedData != nullptr);
-        vmaCopyMemoryToAllocation(g_hAllocator, bufferData.data(), uniformBufferAlloc, 0, bufferData.size());
+        result = vmaCopyMemoryToAllocation(g_hAllocator, bufferData.data(), uniformBufferAlloc, 0, bufferData.size());
+        TEST(result == VK_SUCCESS);
 
         BeginSingleTimeCommands();
 
@@ -6338,9 +6488,7 @@ static void TestAdvancedDataUploading() {
         TEST(result == VK_SUCCESS);
 
         TEST(stagingBufferAllocInfo.pMappedData != nullptr);
-        vmaCopyMemoryToAllocation(g_hAllocator, bufferData.data(), stagingBufferAlloc, 0, bufferData.size());
-
-        result = vmaFlushAllocation(g_hAllocator, uniformBufferAlloc, 0, VK_WHOLE_SIZE);
+        result = vmaCopyMemoryToAllocation(g_hAllocator, bufferData.data(), stagingBufferAlloc, 0, bufferData.size());
         TEST(result == VK_SUCCESS);
 
         BeginSingleTimeCommands();
@@ -8484,28 +8632,56 @@ static void TestMappingHysteresis()
 }
 
 
-static void TestWin32Handles()
+static void TestWin32HandlesExport()
 {
 #if VMA_EXTERNAL_MEMORY_WIN32
     if (!VK_KHR_external_memory_win32_enabled)
         return;
 
-    wprintf(L"Test Win32 handles\n");
+    wprintf(L"Test Win32 handles export\n");
+
+    constexpr VkExternalMemoryHandleTypeFlagBits handleType =
+        VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+
     constexpr static VkExportMemoryAllocateInfoKHR exportMemAllocInfo{
         VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_KHR,
         nullptr,
-        VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
+        handleType
     };
+
     constexpr static VkExternalMemoryBufferCreateInfoKHR externalMemBufCreateInfo{
         VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_BUFFER_CREATE_INFO_KHR,
         nullptr,
-        VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
+        handleType
     };
 
     VkBufferCreateInfo bufCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
     bufCreateInfo.size = 0x10000;
     bufCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     bufCreateInfo.pNext = &externalMemBufCreateInfo;
+
+    bool requiresDedicated = true;
+    {
+        VkPhysicalDeviceExternalBufferInfo externalBufferInfo = {
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO };
+        externalBufferInfo.flags = bufCreateInfo.flags;
+        externalBufferInfo.usage = bufCreateInfo.usage;
+        externalBufferInfo.handleType = handleType;
+
+        VkExternalBufferProperties externalBufferProperties = {
+            VK_STRUCTURE_TYPE_EXTERNAL_BUFFER_PROPERTIES };
+        
+        vkGetPhysicalDeviceExternalBufferProperties(g_hPhysicalDevice,
+            &externalBufferInfo, &externalBufferProperties);
+        if((externalBufferProperties.externalMemoryProperties.externalMemoryFeatures &
+            VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT) == 0)
+        {
+            wprintf(L"    WARNING: External memory not exportable, skipping test.\n");
+            return;
+        }
+        requiresDedicated = (externalBufferProperties.externalMemoryProperties.externalMemoryFeatures &
+            VK_EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_BIT) != 0;
+    }
 
     VmaAllocationCreateInfo allocCreateInfo = {};
     allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
@@ -8525,6 +8701,8 @@ static void TestWin32Handles()
 
     for (size_t test = 0; test < 2; ++test)
     {
+        if(test == 0 && requiresDedicated)
+            continue; // Skip this case because it would fail.
         if (test == 1)
             allocCreateInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 
@@ -8542,6 +8720,121 @@ static void TestWin32Handles()
         vmaDestroyBuffer(g_hAllocator, buf, alloc);
         TEST(CloseHandle(handle));
         TEST(CloseHandle(handle2));
+    }
+
+    vmaDestroyPool(g_hAllocator, pool);
+#endif
+}
+
+static void TestWin32HandlesImport()
+{
+#if VMA_EXTERNAL_MEMORY_WIN32
+    if (!VK_KHR_external_memory_win32_enabled)
+        return;
+
+    wprintf(L"Test Win32 handles import\n");
+
+    constexpr VkExternalMemoryHandleTypeFlagBits handleType =
+        VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+
+    constexpr static VkExportMemoryAllocateInfoKHR exportMemAllocInfo{
+        VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_KHR,
+        nullptr,
+        handleType
+    };
+
+    constexpr static VkExternalMemoryBufferCreateInfoKHR externalMemBufCreateInfo{
+        VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_BUFFER_CREATE_INFO_KHR,
+        nullptr,
+        handleType
+    };
+
+    VkBufferCreateInfo bufCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+    bufCreateInfo.size = 0x10000;
+    bufCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    bufCreateInfo.pNext = &externalMemBufCreateInfo;
+
+    bool requiresDedicated = true;
+    {
+        VkPhysicalDeviceExternalBufferInfo externalBufferInfo = {
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO };
+        externalBufferInfo.flags = bufCreateInfo.flags;
+        externalBufferInfo.usage = bufCreateInfo.usage;
+        externalBufferInfo.handleType = handleType;
+
+        VkExternalBufferProperties externalBufferProperties = {
+            VK_STRUCTURE_TYPE_EXTERNAL_BUFFER_PROPERTIES };
+
+        vkGetPhysicalDeviceExternalBufferProperties(g_hPhysicalDevice,
+            &externalBufferInfo, &externalBufferProperties);
+        constexpr VkExternalMemoryFeatureFlags expectedFlags =
+            VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT | VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT;
+        if((externalBufferProperties.externalMemoryProperties.externalMemoryFeatures &
+            expectedFlags) != expectedFlags)
+        {
+            wprintf(L"    WARNING: External memory not exportable and importable, skipping test.\n");
+            return;
+        }
+        requiresDedicated = (externalBufferProperties.externalMemoryProperties.externalMemoryFeatures &
+            VK_EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_BIT) != 0;
+    }
+
+    VmaAllocationCreateInfo allocCreateInfo = {};
+    allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+
+    uint32_t memTypeIndex = UINT32_MAX;
+    TEST(vmaFindMemoryTypeIndexForBufferInfo(g_hAllocator,
+        &bufCreateInfo, &allocCreateInfo, &memTypeIndex) == VK_SUCCESS);
+
+    VmaPoolCreateInfo poolCreateInfo = {};
+    poolCreateInfo.memoryTypeIndex = memTypeIndex;
+    poolCreateInfo.pMemoryAllocateNext = (void*)&exportMemAllocInfo;
+
+    VmaPool pool = VK_NULL_HANDLE;
+    TEST(vmaCreatePool(g_hAllocator, &poolCreateInfo, &pool) == VK_SUCCESS);
+
+    allocCreateInfo.pool = pool;
+
+    for (size_t test = 0; test < 2; ++test)
+    {
+        if(test == 0 && requiresDedicated)
+            continue; // Skip this case because it would fail.
+        if (test == 1)
+            allocCreateInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+
+        VkBuffer buf = VK_NULL_HANDLE;
+        VmaAllocation alloc = VK_NULL_HANDLE;
+        TEST(vmaCreateBuffer(g_hAllocator, &bufCreateInfo, &allocCreateInfo, &buf, &alloc, nullptr) == VK_SUCCESS);
+        HANDLE handle = NULL;
+        TEST(vmaGetMemoryWin32Handle(g_hAllocator, alloc, nullptr, &handle) == VK_SUCCESS);
+        TEST(handle != nullptr);
+
+        // Import it into another allocation.
+        VkImportMemoryWin32HandleInfoKHR importMemHandleInfo = {
+            VK_STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_KHR };
+        importMemHandleInfo.handleType = handleType;
+        importMemHandleInfo.handle = handle;
+        importMemHandleInfo.name = nullptr;
+        VmaAllocationCreateInfo importAllocCreateInfo = {};
+        importAllocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+
+        VkBuffer importedBuf = VK_NULL_HANDLE;
+        VmaAllocation importedAlloc = VK_NULL_HANDLE;
+        TEST(vmaCreateDedicatedBuffer(g_hAllocator, &bufCreateInfo, &importAllocCreateInfo,
+            &importMemHandleInfo, &importedBuf, &importedAlloc, nullptr) == VK_SUCCESS);
+        TEST(importedBuf != VK_NULL_HANDLE);
+        TEST(importedAlloc != VK_NULL_HANDLE);
+
+        VmaAllocationInfo2 allocInfo2 = {};
+        vmaGetAllocationInfo2(g_hAllocator, importedAlloc, &allocInfo2);
+        if (test == 1)
+        {
+            TEST(allocInfo2.dedicatedMemory != VK_FALSE);
+        }
+
+        vmaDestroyBuffer(g_hAllocator, importedBuf, importedAlloc);
+        vmaDestroyBuffer(g_hAllocator, buf, alloc);
+        TEST(CloseHandle(handle));
     }
 
     vmaDestroyPool(g_hAllocator, pool);
@@ -8581,6 +8874,7 @@ void Test()
     TestAllocationsInitialization();
 #endif
     TestMemoryUsage();
+    TestAllocationWithAlignment();
     TestDataUploadingWithStagingBuffer();
     TestDataUploadingWithMappedMemory();
     TestAdvancedDataUploading();
@@ -8593,7 +8887,8 @@ void Test()
     TestMappingHysteresis();
     TestDeviceLocalMapped();
     TestMaintenance5();
-    TestWin32Handles();
+    TestWin32HandlesExport();
+    TestWin32HandlesImport();
     TestMappingMultithreaded();
     TestLinearAllocator();
     ManuallyTestLinearAllocator();
