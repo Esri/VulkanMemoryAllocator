@@ -2,9 +2,9 @@ from conans import ConanFile
 
 
 class VulkanMemoryAllocatorConan(ConanFile):
-    name = "VulkanMemoryAllocator"
+    name = "vulkan-memory-allocator"
     version = "3.4.0"
-    url = "https://github.com/Esri/VulkanMemoryAllocator/blob/runtimecore/LICENSE.txt"
+    url = "https://github.com/Esri/VulkanMemoryAllocator/blob/runtimecore"
     license = "https://github.com/Esri/VulkanMemoryAllocator/blob/runtimecore/LICENSE.txt"
     description = "Easy to integrate Vulkan memory allocation library."
 
